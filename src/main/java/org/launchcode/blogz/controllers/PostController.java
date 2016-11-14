@@ -33,24 +33,58 @@ public class PostController extends AbstractController {
 	
 	@RequestMapping(value = "/blog/newpost", method = RequestMethod.POST)
 	public String newPost(HttpServletRequest request, Model model) {
-		// TODO - implement newPost
+		// implement newPost
+		// TODO - what if post title already exists?  Do I let it go?  
 		//value, body, error
 		String title = request.getParameter("title");
 		String body = request.getParameter("body");
+		String error = "";
 		
-		
-		// TODO - error check for empty fields
+		// validate parameters/error check for empty fields
+		if(title == "" || title == null){
+			error += "There is a problem with your title dude.\n";
+		}
+		if(body == "" || body == null){
+			error += "Dude!  You forgot to write a post body!";
+		}
+		if(error != ""){
+			model.addAttribute("value", title);
+			model.addAttribute("error", error);
+			model.addAttribute("body", body);
+			return "newpost";
+		}
 		
 		//find User...
 		HttpSession thi = request.getSession();
 		User author = getUserFromSession(thi);		
 		
-		//create a data object post
+		//create a data object post (if not valid send back to form)
 		Post nowPost = new Post(title, body, author);
 		PostDao.save(nowPost);
+		//find the post I just made
+		List<Post> duplicateTitles = PostDao.findByTitle(title);
 		
+		int postnum = 0;//post id number
+		String name = "oops";
 		
-		return "redirect:index"; // TODO - this redirect should go to the new post's page  		
+		//loops through all posts with the same title and tries to determine if it's the post above
+		for(Post postit : duplicateTitles) {
+			if(postit.getBody().equals(body))
+				if(postit.getAuthor().equals(author)){
+					postnum = postit.getUid();
+					name = postit.getAuthor().getUsername();
+					
+				}
+		}
+			
+		//set up URL for redirect
+		String URL = "redirect:http://localhost:8080/blog/";
+		
+		URL = URL + name + "/" + postnum;
+		//String name = author.getUsername();
+		//model.addAttribute("name", name);
+		//return "redirect:index"; // TODO - this redirect should go to the new post's page  	
+		return URL;
 	}
 	
 	@RequestMapping(value = "/blog/{username}/{uid}", method = RequestMethod.GET)
@@ -59,7 +93,7 @@ public class PostController extends AbstractController {
 		String name = username;
 		String error = "";
 		Post currentPost = PostDao.findByUid(uid);
-		System.out.println(name + " = " + currentPost.getAuthor().getUsername());
+		//System.out.println(name + " = " + currentPost.getAuthor().getUsername());
 		//check to see if the name and post id belong together
 		if(name.equals(currentPost.getAuthor().getUsername())){
 			model.addAttribute("currentPost", currentPost);
@@ -80,7 +114,7 @@ public class PostController extends AbstractController {
 	public String userPosts(@PathVariable String username, Model model) {
 		
 		//String username = username;
-		// TODO - implement userPosts
+		// implement userPosts
 		User currentUser = UserDao.findByUsername((String) username);
 		int authorId = currentUser.getUid();
 		//System.out.println("authorid = " + authorId);

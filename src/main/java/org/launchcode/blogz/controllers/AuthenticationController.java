@@ -41,35 +41,39 @@ public class AuthenticationController extends AbstractController {
 		
 		//Check if password equals verify
 		if(password.equals(verify)){
-			System.out.println("Password verify check");
+			//System.out.println("Password verify check");
 			verify_good = true;
 		}else
 			verify_error = "Your passwords don't match.";
 			
 			
 		if(User.isValidPassword(password)){
-			System.out.println("Password is valid.");
+			//System.out.println("Password is valid.");
 			password_good = true;
 		}else
 			password_error = "Your password should be between 6 and 20 characters long";
-				
-				
-		if(User.isValidUsername(username)){
-			System.out.println("Username is valid.");
+		
+		//see if name exists
+		User temp =null;
+		temp = UserDao.findByUsername(username);
+		Boolean nameExists = false;
+		if(temp != null){
+			nameExists = true;
+			username_error = "Your username already exists...";
+		}else if(User.isValidUsername(username)){
+			//System.out.println("Username is valid.");
 			username_good = true;
+			model.addAttribute("username", username);
 		}else
 			username_error = "Your username should be 5 and 11 characters and contain...";
-		
-		//TODO - CHECK FOR DUPLICATE NAME
-		//if()
 		
 		//if above tests pass
 		if(username_good && password_good && verify_good){
 			Bob = new User(username, password);
 			UserDao.save(Bob);
-			System.out.println("Past Save Point");
+			//System.out.println("Past Save Point");
 			HttpSession thi = request.getSession();
-			setUserInSession(thi, Bob);//TODO - error check this implementation to make sure it's database bob and not local bob.  
+			setUserInSession(thi, Bob);
 				
 			}else{
 				//redirect to signup with errors
@@ -78,7 +82,6 @@ public class AuthenticationController extends AbstractController {
 				model.addAttribute("verify_error", verify_error);
 				return "signup";
 			}
-		
 				
 		return "redirect:blog/newpost";
 	}
@@ -91,22 +94,30 @@ public class AuthenticationController extends AbstractController {
 	@RequestMapping(value = "/login", method = RequestMethod.POST)
 	public String login(HttpServletRequest request, Model model) {
 		
-		// TODO - implement login
-		// TODO - implement error
+		//implement login
 		String username = request.getParameter("username");
 		String password = request.getParameter("password");
 		String error = "";
-		//find user
-		//List<HelloLog> logs = helloLogDao.findAll();
-		User currentUser = UserDao.findByUsername(username);
+
+		//does user exist?
+		User currentUser = null;
+		currentUser = UserDao.findByUsername(username);
+		if(currentUser == null){
+			error = "You are not a user.  Please sign up or spell your stuff correctly.  ";
+			model.addAttribute("error", error);
+			return "login";
+		}
+		//check password
 		if(currentUser.isMatchingPassword(password)){
-			System.out.println("login successfull: " + username);
-			//model.addAttribute(currentUser);
 			HttpSession thi = request.getSession();
 			setUserInSession(thi, currentUser);
-		}//else not matching password or invalid user
+		}else{
+			//else not matching password or invalid user
+			error = "This password doesn't what we have on file here...";
+			model.addAttribute("error", error);
+			return "login";
+		}
 		
-		//return "redirect:/newpost";
 		return "redirect:blog/newpost";
 	}
 	
