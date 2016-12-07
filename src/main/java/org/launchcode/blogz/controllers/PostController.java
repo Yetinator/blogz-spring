@@ -62,7 +62,7 @@ public class PostController extends AbstractController {
 		Post nowPost = new Post(title, body, author);
 		PostDao.save(nowPost);
 		//find the post I just made
-		List<Post> duplicateTitles = PostDao.findByTitle(title);
+		List<Post> duplicateTitles = PostDao.findBytitle(title);
 		
 		int postnum = 0;//post id number
 		String name = "oops";

@@ -18,7 +18,7 @@ public interface PostDao extends CrudRepository<Post, Integer> {
     
     List<Post> findAll();
     
-    List<Post> findByTitle(String title);
+    List<Post> findBytitle(String title);
     
     // TODO - add method signatures as needed
 	
